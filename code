@@ -1,0 +1,244 @@
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
+public class Banking implements ActionListener {
+    private JFrame mainFrame;
+    private JTextField inputField;
+    private JLabel checkingLabel, savingsLabel, totalBalanceLabel, historyLabel, goalLabel;
+    private int checkingBalance = 0;
+    private int savingsBalance = 0;
+    private int savingsGoal = 0;
+    private double interestRate = 0.05; // 5% interest rate per transaction
+    private ArrayList<String> transactionHistory = new ArrayList<>();
+
+    private Map<String, Color> colorOptions;
+
+    public Banking() {
+        try {
+            UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        mainFrame = new JFrame("PAA BANK");
+        mainFrame.setVisible(true);
+        mainFrame.setSize(400, 400);
+        mainFrame.setFont(new Font("Arial", Font.BOLD, 18));
+        mainFrame.setLayout(new FlowLayout());
+        mainFrame.getContentPane().setBackground(new Color(230, 230, 250));
+
+        inputField = new JTextField(10);
+        checkingLabel = new JLabel("Checking balance: " + checkingBalance);
+        savingsLabel = new JLabel("Savings balance: " + savingsBalance);
+        totalBalanceLabel = new JLabel("Total balance: " + (checkingBalance + savingsBalance));
+        historyLabel = new JLabel("Transaction history:");
+        historyLabel.setFont(new Font("Arial", Font.PLAIN, 12));
+        goalLabel = new JLabel("Savings goal: $" + savingsGoal);
+
+        JButton depositCheckingButton = new JButton("Deposit to Checking");
+        JButton withdrawCheckingButton = new JButton("Withdraw from Checking");
+        JButton depositSavingsButton = new JButton("Deposit to Savings");
+        JButton withdrawSavingsButton = new JButton("Withdraw from Savings");
+        JButton transferButton = new JButton("Transfer");
+        JButton checkHistoryButton = new JButton("Check Transaction History");
+        JButton setGoalButton = new JButton("Set Savings Goal");
+        JButton resetButton = new JButton("Reset");
+
+        JButton colorButton = new JButton("Change Color");
+
+        depositCheckingButton.setBackground(new Color(144, 238, 144)); // Light Green
+        withdrawCheckingButton.setBackground(new Color(255, 160, 122)); // Light Salmon
+        depositSavingsButton.setBackground(new Color(144, 238, 144)); // Light Green
+        withdrawSavingsButton.setBackground(new Color(255, 160, 122)); // Light Salmon
+        transferButton.setBackground(new Color(173, 216, 230)); // Light Blue
+        checkHistoryButton.setBackground(new Color(173, 216, 230)); // Light Blue
+        setGoalButton.setBackground(new Color(255, 218, 185)); // Peach
+        resetButton.setBackground(new Color(250, 128, 114)); // Salmon
+        colorButton.setBackground(new Color(255, 218, 185)); // Peach
+
+        mainFrame.add(inputField);
+        mainFrame.add(depositCheckingButton);
+        mainFrame.add(withdrawCheckingButton);
+        mainFrame.add(depositSavingsButton);
+        mainFrame.add(withdrawSavingsButton);
+        mainFrame.add(transferButton);
+        mainFrame.add(checkingLabel);
+        mainFrame.add(savingsLabel);
+        mainFrame.add(totalBalanceLabel);
+        mainFrame.add(historyLabel);
+        mainFrame.add(goalLabel);
+        mainFrame.add(checkHistoryButton);
+        mainFrame.add(setGoalButton);
+        mainFrame.add(resetButton);
+        mainFrame.add(colorButton);
+
+        depositCheckingButton.addActionListener(this);
+        withdrawCheckingButton.addActionListener(this);
+        depositSavingsButton.addActionListener(this);
+        withdrawSavingsButton.addActionListener(this);
+        transferButton.addActionListener(this);
+        checkHistoryButton.addActionListener(this);
+        setGoalButton.addActionListener(this);
+        resetButton.addActionListener(this);
+        colorButton.addActionListener(this);
+
+        initializeColorOptions();
+
+        mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    }
+
+    private void initializeColorOptions() {
+        colorOptions = new HashMap<>();
+        colorOptions.put("Blue", new Color(135, 206, 250));
+        colorOptions.put("Green", new Color(144, 238, 144));
+        colorOptions.put("Pink", new Color(255, 182, 193));
+        colorOptions.put("Purple", new Color(218, 112, 214));
+    }
+
+    private void changeBackgroundColor() {
+        String[] colorNames = colorOptions.keySet().toArray(new String[0]);
+        String selectedColor = (String) JOptionPane.showInputDialog(mainFrame,
+                "Choose background color:",
+                "Color Selection",
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                colorNames,
+                colorNames[0]);
+
+        if (selectedColor != null) {
+            mainFrame.getContentPane().setBackground(colorOptions.get(selectedColor));
+        }
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if (e.getActionCommand().equals("Deposit to Checking")) {
+            performCheckingDeposit();
+        } else if (e.getActionCommand().equals("Withdraw from Checking")) {
+            performCheckingWithdrawal();
+        } else if (e.getActionCommand().equals("Deposit to Savings")) {
+            performSavingsDeposit();
+        } else if (e.getActionCommand().equals("Withdraw from Savings")) {
+            performSavingsWithdrawal();
+        } else if (e.getActionCommand().equals("Transfer")) {
+            performTransfer();
+        } else if (e.getActionCommand().equals("Check Transaction History")) {
+            checkTransactionHistory();
+        } else if (e.getActionCommand().equals("Set Savings Goal")) {
+            setSavingsGoal();
+        } else if (e.getActionCommand().equals("Reset")) {
+            reset();
+        } else if (e.getActionCommand().equals("Change Color")) {
+            changeBackgroundColor();
+        }
+    }
+
+    private void performCheckingDeposit() {
+        int amount = Integer.parseInt(inputField.getText());
+        checkingBalance += amount;
+        transactionHistory.add("Checking Deposit: +" + amount);
+
+        updateUI();
+    }
+
+    private void performCheckingWithdrawal() {
+        int amount = Integer.parseInt(inputField.getText());
+        if (amount > checkingBalance) {
+            JOptionPane.showMessageDialog(mainFrame, "Insufficient funds for withdrawal");
+            return;
+        }
+
+        checkingBalance -= amount;
+        transactionHistory.add("Checking Withdrawal: -" + amount);
+
+        updateUI();
+    }
+
+    private void performSavingsDeposit() {
+        int amount = Integer.parseInt(inputField.getText());
+        savingsBalance += amount + (amount * interestRate);
+        transactionHistory.add("Savings Deposit: +" + amount);
+
+        updateUI();
+    }
+
+    private void performSavingsWithdrawal() {
+        int amount = Integer.parseInt(inputField.getText());
+        if (amount > savingsBalance) {
+            JOptionPane.showMessageDialog(mainFrame, "Insufficient funds for withdrawal");
+            return;
+        }
+
+        savingsBalance -= amount;
+        transactionHistory.add("Savings Withdrawal: -" + amount);
+
+        updateUI();
+    }
+
+    private void performTransfer() {
+        int amount = Integer.parseInt(inputField.getText());
+        if (amount > checkingBalance) {
+            JOptionPane.showMessageDialog(mainFrame, "Insufficient funds for transfer");
+            return;
+        }
+
+        checkingBalance -= amount;
+        savingsBalance += amount;
+        transactionHistory.add("Transfer from Checking to Savings: -" + amount);
+
+        updateUI();
+    }
+
+    private void checkTransactionHistory() {
+        StringBuilder historyText = new StringBuilder("<html>Transaction history:<br>");
+        for (String transaction : transactionHistory) {
+            historyText.append(transaction).append("<br>");
+        }
+        historyText.append("</html>");
+        JOptionPane.showMessageDialog(mainFrame, historyText.toString());
+    }
+
+    private void setSavingsGoal() {
+        String inputGoal = JOptionPane.showInputDialog(mainFrame, "Enter your savings goal:");
+        try {
+            savingsGoal = Integer.parseInt(inputGoal);
+            goalLabel.setText("Savings goal: $" + savingsGoal);
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(mainFrame, "Invalid input. Please enter a valid number.");
+        }
+    }
+
+    private void reset() {
+        checkingBalance = 0;
+        savingsBalance = 0;
+        savingsGoal = 0;
+        transactionHistory.clear();
+
+        updateUI();
+    }
+
+    private void updateUI() {
+        totalBalanceLabel.setText("Total balance: " + (checkingBalance + savingsBalance));
+        checkingLabel.setText("Checking balance: " + checkingBalance);
+        savingsLabel.setText("Savings balance: " + savingsBalance);
+        inputField.setText("");
+        updateTransactionHistory();
+    }
+
+    private void updateTransactionHistory() {
+        StringBuilder historyText = new StringBuilder("<html>Transaction history:<br>");
+        for (String transaction : transactionHistory) {
+            historyText.append(transaction).append("<br>");
+        }
+        historyText.append("</html>");
+        historyLabel.setText(historyText.toString());
+    }
+
+    public static void main(String[] args) {
+        new Banking();	
+    }
+}
